@@ -1,0 +1,287 @@
+<html>
+<head>
+<title>Coursework 1 - Image Steganography in C - Hardware-Software Interface</title>
+<style type="text/css">
+body, h1, h2, h3, h4, p, ul { padding: 0; }
+body {
+    background: white;
+    color: black;
+    max-width: 40em;
+    font: 12pt/1.2 "Liberation Serif", serif;
+    margin: 12pt;
+}
+h1 {
+    margin: 12pt 0;
+    font-size: 24pt;
+}
+h2 {
+    margin: 12pt 0 0 0;
+    font-size: 16pt;
+}
+h3 { font-size: 14pt; }
+h4 { font-size: 12pt; }
+h1, h2, h3, h4 { font-weight: bold; }
+.module { font-weight: normal; }
+.author, h2, h3, h4 { font-family: "Liberation Sans", sans-serif; }
+.author {
+    margin: 12pt 0;
+    font-size: 16pt;
+}
+.affil { font-size: 12pt; }
+p, ul {
+    margin: 6pt 0;
+}
+li {
+    margin: 6pt 0 6pt 20pt;
+}
+</style>
+<body>
+
+<h1><span class="module">Hardware-Software Interface</span><br>
+Coursework 1 - Image Steganography in C</h1>
+
+<p class="author">Adam Sampson<br>
+<span class="affil">School of Mathematical and Computer Sciences, Heriot-Watt University</span></p>
+
+<h2>Overview</h2>
+<p>In this coursework, you will demonstrate your ability with the C
+programming language and its standard library by writing a
+<strong>steganography</strong> program which encodes and decodes secret messages in
+bitmap images.</p>
+<p>This coursework contributes to the following learning outcomes of
+the course:</p>
+<ul>
+<li>Ability to develop efficient, resource-conscious code.</li>
+<li>Practical skills in low-level, systems programming, with effective
+  resource management.</li>
+<li>Ability to articulate system-level operations and to identify
+  performance implications of given systems.</li>
+</ul>
+<p>This is an <strong>individual</strong> assessment. The code and documentation you
+submit must be entirely your own work.</p>
+<p>If you have any questions, please ask me &lt;<code>a.sampson@hw.ac.uk</code>&gt;.</p>
+<h2>The problem</h2>
+<p>This coursework involves writing a simple steganography program in C,
+called <code>steg</code>. <code>steg</code> can operate in two modes &mdash; encode and decode
+&mdash; selected by the first command-line argument being <code>e</code> or <code>d</code>.</p>
+<p>An RGB colour bitmap image consists of a grid of pixels, each of which
+has red, green and blue colour values. To <strong>encode</strong> text inside an
+image, your program will replace the red value in successive random
+pixels in the image with characters from the text, outputting a new
+image.</p>
+<p>When encoding, your program will be invoked as:</p>
+<pre><code>./steg e old.ppm &gt;new.ppm
+</code></pre>
+<p>It must prompt for a message to encode, and output the new image to
+<code>stdout</code> (in this case we have redirected it to a file).</p>
+<p>To <strong>decode</strong> the text, your program will compare the new image with the
+old image, and extract characters from the new one where it differs from
+the old one.</p>
+<p>When decoding, your program will be invoked as:</p>
+<pre><code>./steg d old.ppm new.ppm
+</code></pre>
+<p>It must decode the message and output the hidden text to <code>stdout</code>.</p>
+<h2>The PPM image format</h2>
+<p>You will work with <strong>Plain PPM</strong> format images. This is one of a family
+of simple open source image formats, designed to be read and written
+easily by C programs.
+See <a href="http://netpbm.sourceforge.net/doc/ppm.html">the PPM specification</a>
+for full details of PPM and Plain PPM.</p>
+<p>A Plain PPM file consists of ASCII text:</p>
+<pre><code>P3
+# comment1
+# ...
+# commentN
+width height
+max
+r1 g1 b1
+r2 g2 b2
+r3 g3 b3
+...
+</code></pre>
+<p>where:</p>
+<ul>
+<li><code>P3</code> - code indicating Plain PPM format</li>
+<li><code>comment</code> - arbitrary optional comment text</li>
+<li><code>width</code> - integer number of columns</li>
+<li><code>height</code> - integer number of rows</li>
+<li><code>max</code> - integer maximum colour value - usually 255</li>
+<li><code>ri gi bi</code> - integers between 0 and <code>max</code> for pixel <code>i</code>'s red, green
+  and blue values</li>
+</ul>
+<p>All integers are in decimal.</p>
+<p>(From now on, I will refer to Plain PPM just as PPM.)</p>
+<h2>Getting started</h2>
+<p>You will need a Linux C development environment, like we have been using
+in the practical exercises. This might be:</p>
+<ul>
+<li>a MACS lab machine</li>
+<li>a MACS machine remotely, using <a href="https://www.macs.hw.ac.uk/cs/faq.html#Qnx">x2go</a></li>
+<li>the <a href="https://www.macs.hw.ac.uk/VM/">MACS Linux Virtual Machine</a> on your own computer</li>
+<li>a regular Linux installation on your own computer</li>
+</ul>
+<p>You may like to refer to Hans-Wolfgang Loidl's
+<a href="https://www.macs.hw.ac.uk/~hwloidl/Courses/LinuxIntro/t1.html">Linux Introduction</a>.</p>
+<h3>Cloning the project</h3>
+<p>You are provided with a template project containing an outline source
+file. You must use Git and the MACS GitLab Student server to download
+the template project and to submit the assessment.</p>
+<p>First, fork <a href="https://gitlab-student.macs.hw.ac.uk/f28hs-2021-22/f28hs-2021-22-students/f28hs-2021-22-cwk1-c">this project</a>.</p>
+<p>Then clone your fork on your Linux system, e.g. (replacing <code>username</code>
+with your username):</p>
+<pre><code>git clone git@gitlab-student.macs.hw.ac.uk:username/f28hs-2021-22-cwk1-c.git
+</code></pre>
+<p>Make sure that you can compile the starter code before you start making
+changes to the <code>steg.c</code> file. Change into the project directory, and run:</p>
+<pre><code>make
+</code></pre>
+<p>(This may print some warnings because the code is incomplete.)</p>
+<p>As you progress through the coursework requirements, push your work to
+GitLab. Remember to create small incremental improvements with Git
+commits &mdash; you may like to refer to Rob Stewart's
+<a href="https://web.microsoftstream.com/video/407df13c-18b7-4163-a1e3-90e5ceb54585?st=921">Introduction to Git video</a>
+for the lifecycle of files in a Git repository. When you push your
+commits, GitLab will check that your file can be compiled.</p>
+<h3>Test dataset</h3>
+<p>A collection of PPM image files for you to test your steganography
+program with is available from Canvas, under <strong>Course Information &gt;
+Assessment</strong>.</p>
+<p>You may notice some PPM files in this collection have a new line after
+every colour value, whilst others have the R, G and B values for a pixel
+on one row. Either is fine &mdash; the PPM specification allows any kind
+of whitespace between numbers. </p>
+<h2>Requirements</h2>
+<p>This project as a whole is marked out of 20 points, and makes up 50% of
+your final mark for the course.</p>
+<p>The program overall should be valid C99 (or later), and should be robust
+against error.</p>
+<p>Work through the steps below in order.</p>
+<h3>1 - (2 points) Storing PPM images</h3>
+<p>In <code>steg.c</code>, complete the declaration of <code>struct PPM</code>, which holds the
+image read from a PPM file.</p>
+<p>This will need to include the information from the PPM header (<code>width</code>,
+<code>height</code>, <code>max</code>), and a pointer to a dynamically-allocated array
+containing the pixel data. Your program should be able to deal with PPM
+files with arbitrary numbers of rows and columns.</p>
+<h3>2 - PPM functions</h3>
+<p>Implement in <code>steg.c</code> the following functions.</p>
+<p>You may also write additional helper functions or type declarations if
+you like. The template includes some already, e.g. <code>struct Pixel</code> and
+<code>readPPM</code>, but you can rename or remove these provided you implement
+<code>struct PPM</code>, <code>getPPM</code>, <code>showPPM</code>, <code>encode</code> and <code>decode</code>.</p>
+<h4>2a - (2 points) Reading PPM files</h4>
+<pre><code>struct PPM *getPPM(FILE *f);
+</code></pre>
+<p>to return a new <code>struct PPM</code>, containing the PPM image read from open
+file <code>f</code>.</p>
+<p>Use the <code>fscanf</code> function to read numbers from the file. Once you know
+<code>width</code> and <code>height</code>, construct a dynamic array of the appropriate size.
+Don't worry about handling comments in the PPM file for now.</p>
+<h4>2b - (2 points) Writing PPM files</h4>
+<pre><code>void showPPM(const struct PPM *img);
+</code></pre>
+<p>to output the PPM image <code>img</code> to <code>stdout</code> (e.g. by using <code>printf</code>),
+following the syntax in the PPM specification.</p>
+<p>You should test this function by using it to write out an image loaded
+with <code>getPPM</code>. The template code's <code>main</code> function has an extra <code>t</code> mode
+for this.</p>
+<h4>2c - (2 points) Encode data</h4>
+<pre><code>struct PPM *encode(const char *text, const struct PPM *img);
+</code></pre>
+<p>to return a copy of PPM image <code>img</code> with message <code>text</code> hidden in its
+red pixel values.</p>
+<p>You will need to make it replace successive random red pixels with the
+characters from the message. How you select pixels is up to you, but
+make sure that the pixels are chosen in a consistent order (e.g. left to
+right, top to bottom) and enough pixels are selected to encode all of
+the message.</p>
+<h4>2d - (2 points) Decode data</h4>
+<pre><code>char *decode(const struct PPM *oldimg, const struct PPM *newimg);
+</code></pre>
+<p>to return a new string containing the message hidden in the red pixel
+values of PPM image <code>newimg</code>, by comparing it with the red pixel values
+of PPM image <code>oldimg</code>.</p>
+<p>The length of the string that it allocates and returns will depend on
+the length of the message. You may impose a limit on the maximum length
+of a decoded message if this makes the implementation easier.</p>
+<h3>3 - (6 points) Steganography program</h3>
+<p>Complete the main behaviour of the <code>steg</code> program, which encodes or
+decodes images based on its command-line arguments as described above.</p>
+<h3>4 - (2 points) Additional PPM features</h3>
+<p>For an additional 2 points, implement <strong>one</strong> of the following two
+features:</p>
+<ul>
+<li>
+<p>Make <code>getPPM</code> and <code>showPPM</code> read and write comments, by storing the
+  comments as a linked list of strings in <code>struct PPM</code>. You can assume
+  that any comment lines will always be immediately before <code>width</code>
+  (although the PPM specification says they're allowed to occur anywhere
+  in the file). You will need to rework how you read <code>width</code> &mdash; if
+  the first character you read is a <code>#</code>, then you have a comment, else
+  it must be a digit and should be counted as part of <code>width</code>.</p>
+</li>
+<li>
+<p>Make <code>getPPM</code> handle normal PPM files as well as Plain PPM. Normal
+  PPM files start with <code>P6</code> instead of <code>P3</code>, and have the image data
+  stored directly as bytes (one or two bytes per colour, depending on
+  <code>max</code>) rather than as decimal numbers &mdash; see the PPM
+  specification for more details. You can read data like this using the
+  <code>fread</code> function.</p>
+</li>
+</ul>
+<h3>5 - (2 points) Report</h3>
+<p>In <code>Report.md</code>, you should give a <strong>brief</strong> description &mdash; no more
+than a couple of pages of text &mdash; of:</p>
+<ul>
+<li>your program design</li>
+<li>your choice of data structures and algorithms</li>
+</ul>
+<p>Write <code>Report.md</code> using Markdown syntax, which will allow GitLab to
+render it nicely as HTML. See the
+<a href="https://www.markdownguide.org/basic-syntax">Markdown Guide</a>, or the
+help within GitLab, for more details.</p>
+<h2>Submission</h2>
+<p>Submission is due by 15:00 on Tuesday 22nd February through the MACS
+GitLab Student server.</p>
+<p>To submit coursework 1, you must <strong>push</strong> your code to your fork of
+<code>f28hs-2021-22-cwk1-c</code> on the MACS GitLab Student server.</p>
+<p>Your project on GitLab must include:</p>
+<ul>
+<li><code>steg.c</code> - your implementation of image steganography.</li>
+<li><code>Report.md</code> - your report describing your implementation.</li>
+</ul>
+<h2>Plagiarism Policy</h2>
+<p>This coursework is individual work. It is not group work, and you are
+assessed individually. Therefore, the code and report you submit for
+this lab must be entirely your own. You must not share your code with
+other students, and you must not copy code solutions from others.
+The <a href="https://www.hw.ac.uk/uk/students/doc/plagiarismguide.pdf">university plagiarism policy</a>
+is clear: </p>
+<blockquote>
+<p><q>Plagiarism involves the act of taking the ideas, writings or
+inventions of another person and using these as if they were one's
+own, whether intentionally or not.</q> Definition 2.1.</p>
+</blockquote>
+<p>We run plagiarism detection software against <strong>all</strong> source code
+submissions to identify any code similarity across multiple
+submissions. The minimum disciplinary action for plagiarism is an award
+of an F grade (fail) for the course, and serious instances of plagiarism
+will result in compulsory withdrawal from the university.</p>
+<h2>Hints</h2>
+<ul>
+<li>The PPM specification is usually available as a manual page
+  on Linux &mdash; try <code>man 5 ppm</code>.</li>
+<li>You should check that the output image looks reasonable. Many
+  image viewers and editors are capable of reading PPM files,
+  e.g. shotwell, eog, gimp, feh, xli...</li>
+<li>You can use <code>od</code> to look at the raw bytes inside a PPM file.
+  For example: <code>od -x -a ape.ppm | more</code></li>
+<li>C's <code>&lt;stdlib.h&gt;</code> includes a basic random number generator. The
+  <code>srand(seed)</code> function initialises the random number generator with a
+  given unsigned integer, then subsequent calls to <code>rand()</code> will return
+  a number in the range <code>0</code> to <code>RAND_MAX</code>. You can get a value in the
+  range 0 to N - 1 with <code>rand() % N</code>.</li>
+<li>Clue: what happens if a letter you're going to hide has the same value
+  as the pixel component it's going to replace?</li>
+</ul></body>
+</html>
